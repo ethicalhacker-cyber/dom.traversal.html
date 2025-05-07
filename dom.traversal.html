@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DOM Traversal Interactive App</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+
+    header {
+      border-bottom: 2px solid #ccc;
+      margin-bottom: 20px;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 24px;
+    }
+
+    .profile-info p {
+      margin: 4px 0;
+    }
+
+    /* Node styles */
+    .node {
+      border: 1px solid #333;
+      padding: 10px 15px;
+      margin: 10px;
+      border-radius: 10px;
+      display: inline-block;
+      cursor: pointer;
+      min-width: 100px;
+    }
+
+    /* Specific levels */
+    #tree-root {
+      background-color: #ffe0b2; /* Grandparent */
+    }
+
+    #tree-root > .children > .node {
+      background-color: #c8e6c9; /* Parent */
+    }
+
+    #tree-root .children .children > .node {
+      background-color: #bbdefb; /* Child */
+    }
+
+    .children {
+      margin-left: 30px;
+    }
+
+    .highlight {
+      background-color: #fdd835 !important;
+      border-color: #fbc02d !important;
+    }
+
+    /* Button styles */
+    #controls {
+      margin-top: 20px;
+    }
+
+    button {
+      padding: 10px 15px;
+      margin: 5px;
+      font-size: 14px;
+      border: none;
+      border-radius: 6px;
+      background-color: #007bff;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header Section: Profile Info -->
+  <header>
+    <div class="profile-info">
+    <strong>Complete Name:</strong> Vale, Harold Hector P.<br>
+    <strong>Sex:</strong> Male<br>
+    <strong>Address:</strong>Zone 1, BRGY. Salog, Goa Camarines Sur<br>
+    <strong>Course, Year, and Section:</strong> BSIT 2B<br>
+    <strong>Name of School:</strong>Partido State University<br>
+    <strong>Semester and Academic Year:</strong> 2nd Semester, A.Y. 2024–2025<br>
+    <strong>Course Code and Title:</strong>PF2_ Event Driven Programming<br>
+    <strong>Name of Subject Instructor:</strong>Mr. RJ F. Abio
+    </div>
+  </header>
+
+  <h2>Interactive DOM Traversal Tree</h2>
+
+  <!-- Tree Structure -->
+  <div id="tree-root" class="node">
+    Grandparent
+    <div class="children">
+      <div class="node">
+        Parent 1
+        <div class="children">
+          <div class="node">Child 1A</div>
+          <div class="node">Child 1B</div>
+        </div>
+      </div>
+      <div class="node">
+        Parent 2
+        <div class="children">
+          <div class="node">Child 2A</div>
+          <div class="node">Child 2B</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Controls -->
+  <div id="controls">
+    <button onclick="traverseToParent()">Parent</button>
+    <button onclick="traverseToFirstChild()">First Child</button>
+    <button onclick="traverseToPrevSibling()">Previous Sibling</button>
+    <button onclick="traverseToNextSibling()">Next Sibling</button>
+    <button onclick="addChild()">Add Child</button>
+    <button onclick="deleteNode()">Delete Node</button>
+  </div>
+
+  <script>
+    let selectedNode = null;
+
+    // Delegate click events to all current & future .node elements
+    document.addEventListener('click', function (e) {
+      if (e.target.classList.contains('node')) {
+        e.stopPropagation();
+        selectNode(e.target);
+      }
+    });
+
+    // Highlight the selected node
+    function selectNode(node) {
+      if (selectedNode) selectedNode.classList.remove('highlight');
+      selectedNode = node;
+      selectedNode.classList.add('highlight');
+    }
+
+    // Traverse to the parent node
+    function traverseToParent() {
+      if (selectedNode && selectedNode.parentElement.closest('.node')) {
+        selectNode(selectedNode.parentElement.closest('.node'));
+      }
+    }
+
+    // Traverse to the first child node
+    function traverseToFirstChild() {
+      const firstChild = selectedNode?.querySelector('.children > .node');
+      if (firstChild) {
+        selectNode(firstChild);
+      }
+    }
+
+    // Traverse to the next sibling
+    function traverseToNextSibling() {
+      if (!selectedNode) return;
+      const next = selectedNode.nextElementSibling;
+      if (next && next.classList.contains('node')) {
+        selectNode(next);
+      }
+    }
+
+    // Traverse to the previous sibling
+    function traverseToPrevSibling() {
+      if (!selectedNode) return;
+      const prev = selectedNode.previousElementSibling;
+      if (prev && prev.classList.contains('node')) {
+        selectNode(prev);
+      }
+    }
+
+    // Add a child based on selected node type
+    function addChild() {
+      if (!selectedNode) return;
+
+      // If Grandparent: Add a new Parent node with two Child nodes
+      if (selectedNode.id === 'tree-root') {
+        const newParent = createNode("Parent X");
+        const childrenDiv = document.createElement('div');
+        childrenDiv.className = 'children';
+
+        const child1 = createNode("Child XA");
+        const child2 = createNode("Child XB");
+
+        childrenDiv.appendChild(child1);
+        childrenDiv.appendChild(child2);
+        newParent.appendChild(childrenDiv);
+
+        let rootChildren = selectedNode.querySelector('.children');
+        rootChildren.appendChild(newParent);
+        return;
+      }
+
+      // If Parent: Add a single Child node
+      const grandparent = document.getElementById('tree-root');
+      const isParent = selectedNode.parentElement.closest('#tree-root');
+
+      if (isParent && selectedNode !== grandparent) {
+        let childrenContainer = selectedNode.querySelector('.children');
+        if (!childrenContainer) {
+          childrenContainer = document.createElement('div');
+          childrenContainer.className = 'children';
+          selectedNode.appendChild(childrenContainer);
+        }
+
+        const newChild = createNode("New Child");
+        childrenContainer.appendChild(newChild);
+        return;
+      }
+
+      // Otherwise, it's a child — not allowed
+      alert("Cannot add a child to a child node.");
+    }
+
+    // Helper: Create a new node element with event
+    function createNode(label) {
+      const node = document.createElement('div');
+      node.className = 'node';
+      node.textContent = label;
+      return node;
+    }
+
+    // Delete node unless it's the root
+    function deleteNode() {
+      if (!selectedNode) return;
+      if (selectedNode.id === 'tree-root') {
+        alert("Cannot delete the grandparent (root) node.");
+        return;
+      }
+
+      const parent = selectedNode.parentElement.closest('.node');
+      selectedNode.remove();
+      if (parent) selectNode(parent);
+    }
+  </script>
+
+</body>
+</html>
